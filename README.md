@@ -100,7 +100,7 @@ panchayat-minutes/
 
 ## 👨‍💻 Built By
 
-**Viraj** — Sarvam Buildathon 2026
+**Basavaraj N** — Sarvam Buildathon 2026
 
 ## 📜 License
 
