@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🏛️ Panchayat Minutes Generator</title>
+  <style>
+    :root {
+      --primary: #1a5276;
+      --primary-light: #d6eaf8;
+      --green: #1e8449;
+      --green-light: #eafaf1;
+      --accent: #f39c12;
+      --bg: #f4f6f9;
+      --card: #ffffff;
+      --text: #2c3e50;
+      --muted: #7f8c8d;
+      --border: #dde1e7;
+      --radius: 12px;
+      --shadow: 0 2px 16px rgba(26,82,118,0.10);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, #154360 100%);
+      color: white;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .logo { font-size: 2.5rem; }
+    .header-text h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; }
+    .header-text p { font-size: 0.9rem; opacity: 0.8; margin-top: 2px; }
+    .badge {
+      margin-left: auto;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Layout ── */
+    main {
+      max-width: 960px;
+      margin: 32px auto;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 16px 24px;
+      background: var(--primary-light);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 0.95rem;
+    }
+    .card-body { padding: 24px; }
+
+    /* ── Upload Zone ── */
+    .upload-zone {
+      border: 2.5px dashed var(--primary);
+      border-radius: 10px;
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--primary-light);
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      background: #c4def5;
+      border-color: #154360;
+      transform: scale(1.01);
+    }
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .upload-icon { font-size: 3rem; margin-bottom: 12px; }
+    .upload-zone h3 { color: var(--primary); font-size: 1.1rem; margin-bottom: 6px; }
+    .upload-zone p { color: var(--muted); font-size: 0.85rem; }
+
+    /* ── Divider ── */
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin: 16px 0;
+    }
+    .or-divider::before, .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Record Button ── */
+    .record-area { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    #recordBtn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 32px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      background: var(--green);
+      color: white;
+    }
+    #recordBtn:hover { background: #196f3d; transform: scale(1.03); }
+    #recordBtn.recording {
+      background: #e74c3c;
+      animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(231,76,60,0.4); }
+      50% { box-shadow: 0 0 0 12px rgba(231,76,60,0); }
+    }
+    #recordTimer { color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+    #selectedFile {
+      padding: 8px 16px;
+      background: var(--green-light);
+      border-radius: 8px;
+      color: var(--green);
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: none;
+    }
+
+    /* ── Process Button ── */
+    #processBtn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--primary) 0%, #154360 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    #processBtn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,82,118,0.3); }
+    #processBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* ── Progress ── */
+    .progress-steps {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin-bottom: 24px;
+    }
+    .progress-steps::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: var(--border);
+      z-index: 0;
+    }
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      z-index: 1;
+      flex: 1;
+    }
+    .step-dot {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+    }
+    .step.active .step-dot { background: var(--accent); border-color: #e67e22; animation: spin 1s linear infinite; }
+    .step.done .step-dot { background: var(--green); border-color: var(--green); }
+    .step-label { font-size: 0.72rem; color: var(--muted); text-align: center; font-weight: 500; }
+    .step.active .step-label, .step.done .step-label { color: var(--text); font-weight: 600; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* ── Results ── */
+    #results { display: none; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .summary-card {
+      padding: 16px;
+      border-radius: 10px;
+      border-left: 4px solid var(--primary);
+      background: var(--primary-light);
+    }
+    .summary-card.hindi { border-left-color: var(--accent); background: #fef9e7; }
+    .summary-card h4 { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .summary-card p { font-size: 0.9rem; line-height: 1.6; }
+
+    .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .chip {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    .chip.green { background: var(--green-light); color: var(--green); }
+    .chip.orange { background: #fef0d9; color: #e67e22; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th {
+      background: var(--primary);
+      color: white;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #f8f9fa; }
+    tr:hover td { background: var(--primary-light); }
+    .action-table th { background: var(--green); }
+
+    /* Transcript */
+    #transcriptBox {
+      background: #f8f9fa;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 0.88rem;
+      line-height: 1.8;
+      color: var(--muted);
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    /* Audio player */
+    .audio-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: var(--green-light);
+      border-radius: 10px;
+      border: 1px solid #a9dfbf;
+    }
+    .audio-section audio { flex: 1; }
+
+    /* Download bar */
+    .action-bar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: #154360; transform: translateY(-1px); }
+    .btn-green { background: var(--green); color: white; }
+    .btn-green:hover { background: #196f3d; transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    .btn-outline:hover { background: var(--primary-light); }
+
+    /* Error */
+    #errorBox {
+      display: none;
+      padding: 16px;
+      background: #fdedec;
+      border: 1px solid #f1948a;
+      border-radius: 8px;
+      color: #c0392b;
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 20px; color: var(--muted); font-size: 0.9rem; }
+
+    @media (max-width: 600px) {
+      .summary-grid { grid-template-columns: 1fr; }
+      header { padding: 16px; flex-wrap: wrap; }
+      .badge { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🏛️</div>
+  <div class="header-text">
+    <h1>Panchayat Minutes Generator</h1>
+    <p>ग्राम पंचायत बैठक से आधिकारिक कार्यवाही — AI द्वारा</p>
+  </div>
+  <div class="badge">⚡ Powered by Sarvam AI</div>
+</header>
+
+<main>
+
+  <!-- ── Upload Card ── -->
+  <div class="card">
+    <div class="card-header">🎙️ Upload or Record Meeting Audio</div>
+    <div class="card-body">
+
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="audioFile" accept="audio/*" />
+        <div class="upload-icon">📂</div>
+        <h3>Drop audio file here or click to browse</h3>
+        <p>Supports .wav, .mp3, .m4a, .ogg — Hindi, Hinglish, or any Indic language</p>
+      </div>
+
+      <div id="selectedFile">✅ <span id="fileName"></span></div>
+
+      <div class="or-divider">or record live</div>
+
+      <div class="record-area">
+        <button id="recordBtn" onclick="toggleRecord()">
+          <span id="recordIcon">🎤</span>
+          <span id="recordLabel">Start Recording</span>
+        </button>
+        <span id="recordTimer">00:00</span>
+      </div>
+
+      <div id="errorBox">❌ <span id="errorMsg"></span></div>
+
+      <button id="processBtn" onclick="processAudio()" disabled>
+        🚀 Generate Meeting Minutes
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Progress Card ── -->
+  <div class="card" id="progressCard" style="display:none">
+    <div class="card-header">⚙️ Processing...</div>
+    <div class="card-body">
+      <div class="progress-steps">
+        <div class="step" id="step1">
+          <div class="step-dot">🎙️</div>
+          <div class="step-label">Saaras<br>Transcribing</div>
+        </div>
+        <div class="step" id="step2">
+          <div class="step-dot">🧠</div>
+          <div class="step-label">Sarvam-105B<br>Extracting</div>
+        </div>
+        <div class="step" id="step3">
+          <div class="step-dot">🔊</div>
+          <div class="step-label">Bulbul<br>Audio Summary</div>
+        </div>
+        <div class="step" id="step4">
+          <div class="step-dot">📄</div>
+          <div class="step-label">PDF<br>Generating</div>
+        </div>
+      </div>
+      <p id="progressMsg" style="text-align:center; color: var(--muted); font-size:0.9rem;">Uploading audio...</p>
+    </div>
+  </div>
+
+  <!-- ── Results ── -->
+  <div id="results">
+
+    <!-- Action bar -->
+    <div class="action-bar">
+      <a id="pdfLink" href="/download-pdf" target="_blank">
+        <button class="btn btn-primary">📄 Download PDF</button>
+      </a>
+      <button class="btn btn-outline" onclick="document.getElementById('transcriptSection').scrollIntoView({behavior:'smooth'})">
+        🎙️ View Transcript
+      </button>
+      <button class="btn btn-outline" onclick="resetAll()">🔄 New Recording</button>
+    </div>
+
+    <!-- Meta -->
+    <div class="card">
+      <div class="card-header">📋 Meeting Overview</div>
+      <div class="card-body">
+        <div class="meta-chips" id="metaChips"></div>
+        <div class="summary-grid">
+          <div class="summary-card">
+            <h4>📋 Summary (English)</h4>
+            <p id="summaryEn"></p>
+          </div>
+          <div class="summary-card hindi">
+            <h4>📋 सारांश (Hindi)</h4>
+            <p id="summaryHi"></p>
+          </div>
+        </div>
+
+        <!-- Audio summary -->
+        <div class="audio-section" id="audioSection" style="display:none">
+          <span style="font-size:1.5rem">🔊</span>
+          <div style="flex:1">
+            <div style="font-weight:600; margin-bottom:6px; color: var(--green);">Listen to Meeting Summary</div>
+            <audio id="audioPlayer" controls style="width:100%"></audio>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decisions -->
+    <div class="card" id="decisionsCard" style="display:none">
+      <div class="card-header">✅ Decisions Taken / लिए गए निर्णय</div>
+      <div class="card-body" style="padding:0; overflow:hidden; border-radius: 0 0 12px 12px;">
+        <table id="decisionsTable">
+          <thead><tr><th>#</th><th>Decision</th><th>Details</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Action Items -->
+    <div class="card" id="actionsCard" style="display:none">
+      <div class="card-header">🎯 Action Items / कार्य योजना</div>
+      <div class="card-body" style="padding:0; overflow:hidden; border-radius: 0 0 12px 12px;">
+        <table class="action-table" id="actionsTable">
+          <thead><tr><th>#</th><th>Action</th><th>Responsible</th><th>Deadline</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Transcript -->
+    <div class="card" id="transcriptSection">
+      <div class="card-header">🎙️ Raw Transcript / मूल प्रतिलेख</div>
+      <div class="card-body">
+        <div id="transcriptBox"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  let audioBlob = null;
+  let mediaRecorder = null;
+  let chunks = [];
+  let isRecording = false;
+  let timerInterval = null;
+  let seconds = 0;
+
+  // ── File selection ──────────────────────────────────────────────────────────
+  document.getElementById('audioFile').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    audioBlob = file;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('selectedFile').style.display = 'block';
+    document.getElementById('processBtn').disabled = false;
+  });
+
+  // Drag and drop
+  const zone = document.getElementById('uploadZone');
+  zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      audioBlob = file;
+      document.getElementById('fileName').textContent = file.name;
+      document.getElementById('selectedFile').style.display = 'block';
+      document.getElementById('processBtn').disabled = false;
+    }
+  });
+
+  // ── Recording ───────────────────────────────────────────────────────────────
+  async function toggleRecord() {
+    if (!isRecording) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        chunks = [];
+        mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          audioBlob = new Blob(chunks, { type: 'audio/wav' });
+          document.getElementById('fileName').textContent = `Recording (${formatTime(seconds)})`;
+          document.getElementById('selectedFile').style.display = 'block';
+          document.getElementById('processBtn').disabled = false;
+          stream.getTracks().forEach(t => t.stop());
+        };
+        mediaRecorder.start();
+        isRecording = true;
+        seconds = 0;
+        timerInterval = setInterval(() => {
+          seconds++;
+          document.getElementById('recordTimer').textContent = formatTime(seconds);
+        }, 1000);
+        document.getElementById('recordBtn').classList.add('recording');
+        document.getElementById('recordIcon').textContent = '⏹️';
+        document.getElementById('recordLabel').textContent = 'Stop Recording';
+      } catch (err) {
+        showError('Microphone access denied. Please allow microphone and try again.');
+      }
+    } else {
+      mediaRecorder.stop();
+      isRecording = false;
+      clearInterval(timerInterval);
+      document.getElementById('recordBtn').classList.remove('recording');
+      document.getElementById('recordIcon').textContent = '🎤';
+      document.getElementById('recordLabel').textContent = 'Start Recording';
+    }
+  }
+
+  function formatTime(s) {
+    return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  }
+
+  // ── Process ─────────────────────────────────────────────────────────────────
+  async function processAudio() {
+    if (!audioBlob) return;
+    hideError();
+
+    // Show progress
+    document.getElementById('processBtn').disabled = true;
+    document.getElementById('progressCard').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+
+    setStep(1, 'active');
+    updateProgress('🎙️ Saaras is transcribing your audio...');
+
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'meeting.wav');
+
+    try {
+      const resp = await fetch('/process', { method: 'POST', body: formData });
+
+      if (!resp.ok) {
+        const err = await resp.json();
+        throw new Error(err.detail || 'Processing failed');
+      }
+
+      setStep(1, 'done'); setStep(2, 'active');
+      updateProgress('🧠 Sarvam-105B extracting decisions & action items...');
+      await sleep(800);
+
+      setStep(2, 'done'); setStep(3, 'active');
+      updateProgress('🔊 Bulbul generating audio summary...');
+      await sleep(600);
+
+      setStep(3, 'done'); setStep(4, 'active');
+      updateProgress('📄 Generating bilingual PDF...');
+      await sleep(500);
+
+      setStep(4, 'done');
+      updateProgress('✅ Done! Your minutes are ready.');
+
+      const data = await resp.json();
+      renderResults(data);
+
+    } catch (err) {
+      document.getElementById('progressCard').style.display = 'none';
+      document.getElementById('processBtn').disabled = false;
+      showError(err.message);
+    }
+  }
+
+  // ── Render Results ──────────────────────────────────────────────────────────
+  function renderResults(data) {
+    const m = data.minutes;
+
+    // Transcript
+    document.getElementById('transcriptBox').textContent = data.transcript;
+
+    // Meta chips
+    const chips = document.getElementById('metaChips');
+    chips.innerHTML = '';
+    if (m.meeting_title) chips.innerHTML += `<span class="chip">📌 ${m.meeting_title}</span>`;
+    if (m.date_mentioned && m.date_mentioned !== 'Not specified') chips.innerHTML += `<span class="chip orange">📅 ${m.date_mentioned}</span>`;
+    if (m.attendees?.length) chips.innerHTML += `<span class="chip green">👥 ${m.attendees.length} Attendees</span>`;
+    if (m.decisions?.length) chips.innerHTML += `<span class="chip">✅ ${m.decisions.length} Decisions</span>`;
+    if (m.action_items?.length) chips.innerHTML += `<span class="chip green">🎯 ${m.action_items.length} Action Items</span>`;
+
+    // Summaries
+    document.getElementById('summaryEn').textContent = m.summary_english || '';
+    document.getElementById('summaryHi').textContent = m.summary_hindi || '';
+
+    // Audio
+    if (data.audio_summary_b64) {
+      const audioEl = document.getElementById('audioPlayer');
+      audioEl.src = `data:audio/wav;base64,${data.audio_summary_b64}`;
+      document.getElementById('audioSection').style.display = 'flex';
+    }
+
+    // Decisions
+    if (m.decisions?.length) {
+      const tbody = document.querySelector('#decisionsTable tbody');
+      tbody.innerHTML = m.decisions.map((d, i) => `
+        <tr>
+          <td style="font-weight:700; color:var(--primary)">${i+1}</td>
+          <td>${d.decision || ''}</td>
+          <td style="color:var(--muted)">${d.details || ''}</td>
+        </tr>
+      `).join('');
+      document.getElementById('decisionsCard').style.display = 'block';
+    }
+
+    // Action items
+    if (m.action_items?.length) {
+      const tbody = document.querySelector('#actionsTable tbody');
+      tbody.innerHTML = m.action_items.map((a, i) => `
+        <tr>
+          <td style="font-weight:700; color:var(--green)">${i+1}</td>
+          <td>${a.action || ''}</td>
+          <td><span class="chip">${a.responsible || 'TBD'}</span></td>
+          <td style="color: var(--accent); font-weight:600">${a.deadline || 'TBD'}</td>
+        </tr>
+      `).join('');
+      document.getElementById('actionsCard').style.display = 'block';
+    }
+
+    // Show results
+    document.getElementById('results').style.display = 'flex';
+    document.getElementById('results').style.flexDirection = 'column';
+    document.getElementById('results').style.gap = '24px';
+    document.getElementById('progressCard').style.display = 'none';
+
+    // Scroll
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  function setStep(n, state) {
+    const el = document.getElementById(`step${n}`);
+    el.className = `step ${state}`;
+  }
+
+  function updateProgress(msg) {
+    document.getElementById('progressMsg').textContent = msg;
+  }
+
+  function showError(msg) {
+    document.getElementById('errorMsg').textContent = msg;
+    document.getElementById('errorBox').style.display = 'block';
+  }
+
+  function hideError() {
+    document.getElementById('errorBox').style.display = 'none';
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function resetAll() {
+    audioBlob = null;
+    document.getElementById('audioFile').value = '';
+    document.getElementById('selectedFile').style.display = 'none';
+    document.getElementById('processBtn').disabled = true;
+    document.getElementById('progressCard').style.display = 'none';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('recordTimer').textContent = '00:00';
+    hideError();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>
